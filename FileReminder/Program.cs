@@ -6,6 +6,21 @@ using System.Windows.Forms;
 
 namespace FileReminder
 {
+    //public partial class FileReminder
+    //{
+    //    public static FileReminder defaultForm = new FileReminder();
+
+    //    public static FileReminder Default  
+    //    {  
+    //        get  
+    //        {  
+    //            if (defaultForm == null)  
+    //                defaultForm = new FileReminder();  
+    //            return defaultForm;  
+    //        }  
+    //    }  
+    //}
+
     static class Program
     {
         /// <summary>
@@ -16,6 +31,7 @@ namespace FileReminder
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            //Application.Run(FileReminder.Default);
             Application.Run(new FileReminder());
         }
     }
