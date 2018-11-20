@@ -28,53 +28,35 @@ namespace FileReminder
             public List<string> filepathList = new List<string>() { };
         }
 
-        // exe設定クラス
-        public class settings
+        public class fileInfomation
         {
-            //public string dialog_frem_savepath { set; get; }
-            //public string dialog_playlist_savepath { set; get; }
-            
-            //public string[] dialog_savepath { set; get; }
-            //public string[] filename { set; get; }
+            public filepaths fPs { get; set; }
+            public bool already_saveflg { get; set; }
+            public bool initialFlg { get; set; }
+            public bool updateFlg { get; set; }
 
-            
-            
+            public fileInfomation()
+            {
+                fPs = new filepaths();
+                already_saveflg =true;
+                initialFlg = true;
+                updateFlg = false;
+            }
+        }
 
-            [XmlAttribute]
+        // config設定クラス
+        public class save_config
+        {
             public string listbox_font_type { set; get; }
-            [XmlAttribute]
             public float listbox_font_size { set; get; }
-            [XmlAttribute]
             public bool highlightFlg { set; get; }
-            [XmlAttribute]
             public int form_width { set; get; }
-            [XmlAttribute]
             public int form_height { set; get; }
-            [XmlAttribute]
             public int form_start_x { set; get; }
-            [XmlAttribute]
             public int form_start_y { set; get; }
 
-            [XmlIgnore]
-            // key: file name, value: dialog path
-            public NAME_PATH_DIC filename_path { get; set; }
-            [XmlIgnore]
-            public Dictionary<string, filepaths> filelist { get; set; }
-            [XmlIgnore]
-            private FileReminder parent;
-
-            public settings()
+            public save_config()
             {
-
-            }
-
-            public settings(FileReminder parent)
-            {
-                //dialog_frem_savepath = EXE_PATH;
-                //dialog_playlist_savepath = EXE_PATH;
-                //dialog_savepath = new string[] { EXE_PATH , EXE_PATH };
-                filename_path = new NAME_PATH_DIC{{INIT_SYMBOL, INIT_FILENAME}, {DEFAULT_SYMBOL, EXE_PATH}};
-                filelist = new Dictionary<string, filepaths>();
                 listbox_font_size = 12;
                 listbox_font_type = "メイリオ";
                 highlightFlg = false;
@@ -82,18 +64,107 @@ namespace FileReminder
                 form_height = 431;
                 form_start_x = 200;
                 form_start_y = 200;
+            }
+        }
 
-                this.parent = parent;
+        // カレントクラス
+        public class currentInfomation
+        {
+            public string[] _currentFileName { get; set; }
+
+            public int _currentTabIndex { get; set; }
+
+            public ListBox _currentListBox { get; set; }
+
+            public fileInfomation _fileInfo { get; set; }
+
+            public currentInfomation()
+            {
+                _currentFileName = new string[2].Select(i => i = INIT_FILENAME).ToArray();
+                _currentTabIndex = 0;
+                _currentListBox = new ListBox();
+                _fileInfo = new fileInfomation();
+            }
+        }
+
+        // 設定クラス
+        public class settings
+        {
+            public List<string> readfile_fullpath { get; set; }
+
+            public Dictionary<string, currentInfomation> currentInfo { get; set; }
+
+            public string currentkey { get; set; }
+
+            //↓主にゲッタ
+
+            public string currentFrem
+            {
+                get
+                {
+                    return currentInfo[currentkey]._currentFileName[(int)FileType.FREM];
+                }
+                set
+                {
+                    currentInfo[currentkey]._currentFileName[(int)FileType.FREM] = value;
+                }
             }
 
-            public string getFullPath(string fileName)
+            public ListBox currentListBox
             {
-                return string.Format("{0}\\{1}", this.filename_path[fileName], fileName);
+                get
+                {
+                    return currentInfo[currentkey]._currentListBox;
+                }
+                set
+                {
+                    currentInfo[currentkey]._currentListBox = value;
+                }
             }
 
-            public List<string> getCurrentList()
+            public fileInfomation currentFileInfo
             {
-                return this.filelist[parent.currentFileName[(int)FileType.FREM]].filepathList;
+                get
+                {
+                    return currentInfo[currentkey]._fileInfo;
+                }
+            }
+
+            //-------
+
+            public filepaths currentFilePathClass
+            {
+                get
+                {
+                    return currentInfo[currentkey]._fileInfo.fPs;
+                }
+            }
+
+            public List<string> currentFileList
+            {
+                get
+                {
+                    return currentInfo[currentkey]._fileInfo.fPs.filepathList;
+                }
+            }
+
+            //public currentInfomation currentInfoMain
+            //{
+            //    get
+            //    {
+            //        return currentInfo[currentkey];
+            //    }                               
+            //}
+
+            public settings()
+            {
+                readfile_fullpath = new List<string>();
+                currentInfo = new Dictionary<string,currentInfomation>();
+            }
+
+            public string getFileDirectory(FileType filetype)
+            {
+                return (this.currentFrem == INIT_FILENAME) ? EXE_FOLDER : Path.GetDirectoryName(this.currentFrem);
             }
         }
 
@@ -110,6 +181,11 @@ namespace FileReminder
             public string filename;
         }
 
+        public struct tagElement_struct
+        {
+            public string titlename;
+        }
+
         /****************** クラス ******************/
 
 
@@ -117,24 +193,27 @@ namespace FileReminder
         /****************** グローバル変数 ******************/
         /// <summary>フォームタイトルにつける開いているfremファイル名</summary>
         //string readFileName = "新規";
-        const string EXE_NAME = "File Reminder";
+        const string EXE_FORM_NAME = "File Reminder";
+        const string EXE_FILE_NAME = "FileReminder.exe";
         const string INIT_SYMBOL = "init";
         const string INIT_FILENAME = "新規";
+        const string UPDATE = "(更新)";
         const string DEFAULT_SYMBOL = "default";
         const string FREM_CONFIG = "frem.config";
         const string FREM_FILTER = "FREMファイル(*.frem)|*.frem|すべてのファイル(*.*)|*.*";
         const string MPCPL_FILTER = "MPCPLファイル(*.mpcpl)|*.mpcpl|すべてのファイル(*.*)|*.*";
-        static string EXE_PATH = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-        string CONFIG_PATH = string.Format("{0}\\{1}", EXE_PATH, FREM_CONFIG);
+        static string EXE_FOLDER = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        static string EXE_PATH = string.Format("{0}\\{1}", EXE_FOLDER, EXE_FILE_NAME);
+        string CONFIG_PATH = string.Format("{0}\\{1}", EXE_FOLDER, FREM_CONFIG);
 
         List<string> movie_ext = new List<string> { ".mp4", ".wmv", ".avi", ".mov", ".mpeg", ".mkv", ".flv" };
 
         // 保存済みフラグ
-        bool alreadySaveFlg = false;
+        //bool alreadySaveFlg = false;
         // 新規フラグ
-        bool initialFlg = true;
+        //bool initialFlg = true;
         // 更新フラグ
-        bool updateFlg = false;
+        //bool updateFlg = false;
         // Ctrlキーフラグ
         bool ctrlFlg = false;
         // リストボックスマウスオーバー中のインデックス
@@ -142,15 +221,13 @@ namespace FileReminder
         // タブ数
         int tabCnt = 0;
 
-        ListBox currentListBox = null;
+        //ListBox currentListBox = null;
 
-        string[] currentFileName = new string[2].Select(i => i = DEFAULT_SYMBOL).ToArray();
+        //string[] currentFileName = new string[2].Select(i => i = DEFAULT_SYMBOL).ToArray();
 
-        //filepaths appFilePaths = new filepaths();
+        save_config saveConfig = new save_config();
 
-        settings appSettings;
-
-        //reminderTab reminderTabs = new reminderTab(FileReminder.Default);
+        settings appSettings = new settings();
         
         reminderTab reminderTabs;
 
@@ -161,6 +238,26 @@ namespace FileReminder
 
 
         /****************** 関数 ******************/
+
+        /*
+         * タブ情報追加処理
+         */
+        private void addTabInfo(string fremFilePath, fileInfomation fI)
+        {
+            appSettings.currentkey = fremFilePath;
+
+            currentInfomation curInfo = new currentInfomation();
+
+            curInfo._currentFileName[(int)FileType.FREM] = fremFilePath;
+
+            curInfo._currentTabIndex = this.tabControl1.SelectedIndex;
+            // タブ作成済みで次のタブインデックスをさす準備をしているためデクリメントする
+            curInfo._currentListBox = reminderTabs.listboxs[tabCnt - 1];
+
+            curInfo._fileInfo = fI;
+
+            appSettings.currentInfo.Add(fremFilePath, curInfo);
+        }
 
         /*
          * fremファイル読み込み、リストボックス設定
@@ -175,18 +272,38 @@ namespace FileReminder
             fileName = Path.GetFileName(fremFile);
             filePath = Path.GetDirectoryName(fremFile);
 
-            appSettings.filename_path.Add(fileName, filePath);
+            //appSettings.filename_path.Add(fremFile, filePath);
                 
-            // 現在のタブで開いているファイル名を変更
-            currentFileName[(int)FileType.FREM] = fileName;
+            // 現在のタブで開いているファイルフルパスを変更
+            //appSettings.currentInfoMain.currentFileName[(int)FileType.FREM] = fremFile;
+
+            //appSettings.currentFrem = fremFile;
+
+            // 読み込みファイルに追加
+            appSettings.readfile_fullpath.Add(fremFile);
 
             // fremファイルごとにファイルリストを設定
-            appSettings.filelist.Add(fileName, fP);
+            //appSettings.filelist.Add(fremFile, new fileInfo{fPs = fP, already_saveflg = true, initialFlg = false});
+
+
+            /// タブ情報追加
+
+            addTabInfo(fremFile, new fileInfomation{fPs = fP, already_saveflg = true, initialFlg = false});
+
+            ///
+
+            //appSettings.currentTabIndex = this.tabControl1.SelectedIndex;
+
+            //appSettings.currentFileList = fP.filepathList;
+
+            //appSettings.filelist_key = fremFile;
+
+            formTitleRefresh();
 
             // リストボックスにアイテムを追加
             foreach (string item in fP.filepathList)
             {
-                currentListBox.Items.Add(Path.GetFileName(item));
+                appSettings.currentListBox.Items.Add(Path.GetFileName(item));
             }
         }
 
@@ -198,9 +315,9 @@ namespace FileReminder
             reminderTabs.tabs.Add(new TabPage(tabName));
             reminderTabs.listboxs.Add(new ListBox());
             reminderTabs.tabInit(tabCnt);
-            currentListBox = reminderTabs.listboxs[tabCnt];
+            //appSettings.currentListBox = reminderTabs.listboxs[tabCnt];
 
-            tabControl1.SelectedIndex = tabCnt;
+            //tabControl1.SelectedIndex = tabCnt;
 
             tabCnt++;
         }
@@ -210,9 +327,9 @@ namespace FileReminder
          */
         private void fileExecute()
         {
-            if (currentListBox.SelectedIndex != -1)
+            if (appSettings.currentListBox.SelectedIndex != -1)
             {
-                string a = appSettings.getCurrentList()[currentListBox.SelectedIndex];
+                string a = appSettings.currentFileList[appSettings.currentListBox.SelectedIndex];
 
                 if (File.Exists(a))
                 {
@@ -231,37 +348,69 @@ namespace FileReminder
          */
         private void formTitleUpdate()
         {
-            if (alreadySaveFlg)
+            if (appSettings.currentFileInfo.already_saveflg)
             {
                 // 保存済みであればタイトルに更新をいれる
-                this.Text += " (更新)";
+                //this.Text += " (更新)";
+                this.Text = string.Format("{0} {1} - {2}", appSettings.currentFrem,UPDATE , EXE_FORM_NAME);
                 // 更新がかかったので保存済みフラグをおとす
-                alreadySaveFlg = false;
+                appSettings.currentFileInfo.already_saveflg = false;
+                overwriteToolStripMenuItem.Enabled = true;
             }
         }
+
+        /*
+         * フォームタイトル読み込みファイル名変更
+         */
+        private void formTitleRefresh()
+        {
+            if (appSettings.currentFileInfo.already_saveflg)
+            {
+                this.Text = string.Format("{0} - {1}", appSettings.currentFrem, EXE_FORM_NAME);
+            }
+            else
+            {
+                this.Text = string.Format("{0} {1} - {2}", appSettings.currentFrem,UPDATE , EXE_FORM_NAME);
+            }
+        }
+
+        /*
+         * カレント変更処理
+         */
+        //private void currentChange(int index)
+        //{
+        //    appSettings.currentTabIndex = index;
+            
+        //    appSettings.currentFrem = appSettings.readfile_fullpath[index];
+
+        //    appSettings.currentListBox = reminderTabs.listboxs[index];
+
+        //    appSettings.filelist_key = appSettings.readfile_fullpath[index];
+        //}
 
         /*
          * ファイル保存
          */
         private void fileSaveOut(FileType filetype)
         {
-            string fileName = currentFileName[(int)filetype];                       // 保存ファイル名
-            string savepath = appSettings.getFullPath(fileName);                    // 保存ファイルフルパス
-            filepaths fP = appSettings.filelist[currentFileName[(int)filetype]];    // 保存用クラス
+            //string fileName = appSettings.currentFileName[(int)filetype];                       // 保存ファイル名
+            string fileNameFullPath = appSettings.currentFrem;                    // 保存ファイルフルパス
+            //filepaths fP = appSettings.filelist[appSettings.filelist_key].fPs;    // 保存用クラス
+            filepaths fP = appSettings.currentFilePathClass;
 
             // 保存ファイル切り替え
             switch (filetype)
             {
                 case FileType.FREM:     // fremファイル
 
-                    util.xmlWrite(fP, savepath, "書込みエラー");
-
-                    this.Text = string.Format("{0} [{1}]", EXE_NAME, fileName);
+                    util.xmlWrite(fP, fileNameFullPath, "書込みエラー");
 
                     overwriteToolStripMenuItem.Enabled = true;
                     // 保存済みとし、新規をはずす
-                    alreadySaveFlg = true;
-                    initialFlg = false;
+                    appSettings.currentFileInfo.already_saveflg = true;
+                    appSettings.currentFileInfo.initialFlg = false;
+
+                    formTitleRefresh();
 
                     break;
 
@@ -270,7 +419,7 @@ namespace FileReminder
                     int lineCnt = 1;
 
                     // ファイルを上書きし、書き込む
-                    StreamWriter sw = new StreamWriter(savepath, false, Encoding.GetEncoding("utf-8"));
+                    StreamWriter sw = new StreamWriter(fileNameFullPath, false, Encoding.GetEncoding("utf-8"));
 
                     sw.WriteLine("MPCPLAYLIST");
 
@@ -309,11 +458,11 @@ namespace FileReminder
 
             // はじめに表示されるフォルダを指定する
             //sfd.InitialDirectory = appSettings.dialog_savepath[(int)filetype];
-            sfd.InitialDirectory = appSettings.filename_path[currentFileName[(int)filetype]];
+            //sfd.InitialDirectory = appSettings.filename_path[currentFileName[(int)filetype]];
+            sfd.InitialDirectory = appSettings.getFileDirectory(filetype);
 
             // [ファイルの種類]に表示される選択肢を指定する
             // 指定しない（空の文字列）の時は、現在のディレクトリが表示される
-            //sfd.Filter = "HTMLファイル(*.html;*.htm)|*.html;*.htm|すべてのファイル(*.*)|*.*";
 
             sfd.Filter = filter;
 
@@ -331,27 +480,20 @@ namespace FileReminder
             // ダイアログを表示する
             if (dialog_ret == DialogResult.OK)
             {
-                // ダイアログ初期パスを記憶する
-                //appSettings.dialog_savepath[(int)filetype] = Path.GetDirectoryName(sfd.FileName);
-                // 保存ファイル名だけを取り出す
-                //appSettings.filename[(int)filetype] = Path.GetFileName(sfd.FileName);
-
-                // ダイアログパスとファイル名を設定する
-                appSettings.filename_path.Add(Path.GetFileName(sfd.FileName), Path.GetDirectoryName(sfd.FileName));
-
                 string fileName = "";
                 string filePath = "";
 
                 fileName = Path.GetFileName(sfd.FileName);
                 filePath = Path.GetDirectoryName(sfd.FileName);
 
-                appSettings.filename_path.Add(fileName, filePath);
+                appSettings.readfile_fullpath.Add(sfd.FileName);
 
-                // "新規"をファイル名に変更
-                appSettings.filename_path[INIT_SYMBOL] = fileName;
+                // 現在のファイル名を更新（ファイル種別毎）
+                //appSettings.currentFileName[(int)FileType.FREM] = sfd.FileName;
+                appSettings.currentFrem = sfd.FileName;
                 
                 // 最新保存ファイル名を変更（ファイル種別毎）
-                currentFileName[(int)filetype] = fileName;
+                //currentFileName[(int)filetype] = sfd.FileName;
 
                 fileSaveOut(filetype);
             }
@@ -364,7 +506,7 @@ namespace FileReminder
          */
         private void openFolder(int index)
         {
-            Process.Start("EXPLORER.EXE", "/select," + appSettings.filelist[currentFileName[(int)FileType.FREM]].filepathList[index]);
+            Process.Start("EXPLORER.EXE", "/select," + appSettings.currentFileList[index]);
         }
 
         /*
@@ -372,14 +514,15 @@ namespace FileReminder
          */
         private void settingInitialize()
         {
-            currentListBox.Font = new Font(appSettings.listbox_font_type, appSettings.listbox_font_size);
-            highligntToolStripMenuItem.Checked = appSettings.highlightFlg;
-            this.Width = appSettings.form_width;
-            this.Height = appSettings.form_height;
-            this.Location = new Point(appSettings.form_start_x, appSettings.form_start_y);
+            appSettings.currentListBox.Font = new Font(saveConfig.listbox_font_type, saveConfig.listbox_font_size);
+            highligntToolStripMenuItem.Checked = saveConfig.highlightFlg;
+            this.Width = saveConfig.form_width;
+            this.Height = saveConfig.form_height;
+            this.Location = new Point(saveConfig.form_start_x, saveConfig.form_start_y);
 
             // ファイル読み込みがあればファイル名をタイトルに、なければ新規をタイトルにつける
-            this.Text += string.Format(" [{0}]", appSettings.filename_path[INIT_SYMBOL]);
+            //this.Text += string.Format(" [{0}]", appSettings.currentFileName[(int)FileType.FREM]);
+            formTitleRefresh();
         }
 
         /*
@@ -387,10 +530,10 @@ namespace FileReminder
          */
         private void settingFinalize()
         {
-            appSettings.form_width = this.Width;
-            appSettings.form_height = this.Height;
-            appSettings.form_start_x = this.Location.X;
-            appSettings.form_start_y = this.Location.Y;
+            saveConfig.form_width = this.Width;
+            saveConfig.form_height = this.Height;
+            saveConfig.form_start_x = this.Location.X;
+            saveConfig.form_start_y = this.Location.Y;
         }
 
         /****************** 関数 ******************/
@@ -403,8 +546,6 @@ namespace FileReminder
 
             reminderTabs = new reminderTab(this);
 
-            appSettings = new settings(this);
-
             overwriteToolStripMenuItem.Enabled = false;
 
             label1.Text = "";
@@ -414,13 +555,31 @@ namespace FileReminder
             // frem.config があれば読み込む
             if (File.Exists(CONFIG_PATH))
             {
-                util.xmlRead(ref appSettings, CONFIG_PATH, "0");
+                util.xmlRead(ref saveConfig, CONFIG_PATH, "0");
+
+                //appSettings.readfile_fullpath = new List<string>();
+                //appSettings.filelist = new Dictionary<string, filepaths>();
+                //appSettings.currentFileName = new string[2].Select(i => i = INIT_FILENAME).ToArray();
+                //appSettings.currentFileList = new List<string>();
+                //appSettings.currentListBox = new ListBox();
             }
 
             if (cmds.Length == 1)
             {
                 // 新規で起動
+
+
+                appSettings.currentkey = INIT_FILENAME;
+                appSettings.readfile_fullpath.Add(INIT_FILENAME);
+                
                 addTab(INIT_FILENAME);
+                addTabInfo(INIT_FILENAME, new fileInfomation());
+                
+                //addTab(INIT_FILENAME);
+                // 新規タブが追加されるのでインデックス管理するために実行ファイルパスを追加しておく
+                //appSettings.readfile_fullpath.Add(INIT_FILENAME);
+                //appSettings.currentkey = INIT_FILENAME;
+                //addTabInfo(INIT_FILENAME, new fileInfomation());
             }
             else if (cmds.Length == 2)
             {
@@ -431,17 +590,21 @@ namespace FileReminder
                 // fremファイル名
                 string fileName = Path.GetFileName(fremFile);
 
+                addTab(fileName);
+
                 filepaths fP = new filepaths();
 
                 fremRead(ref fP, fremFile);
 
                 // "新規"をファイル名に変更
-                appSettings.filename_path[INIT_SYMBOL] = fileName;
+                //appSettings.filename_path[INIT_SYMBOL] = fileName;
 
-                overwriteToolStripMenuItem.Enabled = true;
+                //appSettings.currentFileName[(int)FileType.FREM] = fremFile;
+
                 // ファイル読み込みだからセーブ済みとし、新規ではない
-                alreadySaveFlg = true;
-                initialFlg = false;
+                overwriteToolStripMenuItem.Enabled = true;
+                appSettings.currentFileInfo.already_saveflg = true;
+                appSettings.currentFileInfo.initialFlg = false;
             }
 
             // イニシャル処理
@@ -468,25 +631,28 @@ namespace FileReminder
 
             if (Path.GetExtension(fileNames[0]) == ".frem")
             {
+                // 既に読み込んでいたらスキップ
+                if (appSettings.readfile_fullpath.Contains(fileNames[0])) return;
+
                 filepaths fP = new filepaths();
 
+                //fremRead(ref fP, fileNames[0]);
                 addTab(Path.GetFileName(fileNames[0]));
                 fremRead(ref fP, fileNames[0]);
+
+                tabControl1.SelectedIndex = tabCnt - 1;
             }
             else
             {
                 // ListBoxに追加する
-                currentListBox.Items.AddRange(fileNames.Select(i => Path.GetFileName(i)).ToArray());
+                appSettings.currentListBox.Items.AddRange(fileNames.Select(i => Path.GetFileName(i)).ToArray());
                 // 参照パスリストに追加する
                 //appFilePaths.filepathList.AddRange(fileNames);
-                appSettings.getCurrentList().AddRange(fileNames);
-
+                appSettings.currentFileList.AddRange(fileNames);
                 // フォームタイトル更新
                 formTitleUpdate();
-                updateFlg = true;
+                appSettings.currentFileInfo.updateFlg = true;
             }
-
-
         }
 
         /* 
@@ -504,9 +670,9 @@ namespace FileReminder
         {
             Keys inputKey = e.KeyData;
 
-            int sel = currentListBox.SelectedIndex;
+            int sel = appSettings.currentListBox.SelectedIndex;
 
-            ListBox.SelectedIndexCollection Indices = currentListBox.SelectedIndices;
+            ListBox.SelectedIndexCollection Indices = appSettings.currentListBox.SelectedIndices;
 
             List<string> itemList = new List<string>();
 
@@ -519,29 +685,29 @@ namespace FileReminder
                     List<string> removeList = new List<string>();
 
                     // 削除リストを作成（パス参照リスト用）
-                    foreach (int i in currentListBox.SelectedIndices)
+                    foreach (int i in appSettings.currentListBox.SelectedIndices)
                     {
-                        removeList.Add(appSettings.getCurrentList()[i]);
+                        removeList.Add(appSettings.currentFileList[i]);
                     }
                     // 削除リストに該当するものを削除（パス参照リスト用）
                     foreach (string s in removeList)
                     {
-                        appSettings.getCurrentList().Remove(s);
+                        appSettings.currentFileList.Remove(s);
                     }
                     // 削除リストを作成（リストボックス用）
-                    for (int i = 0; i < currentListBox.SelectedItems.Count; i++)
+                    for (int i = 0; i < appSettings.currentListBox.SelectedItems.Count; i++)
                     {
-                        itemList.Add(currentListBox.SelectedItems[i].ToString());
+                        itemList.Add(appSettings.currentListBox.SelectedItems[i].ToString());
                     }
                     // 削除リストに該当するものを削除（リストボックス用）
                     foreach (var b in itemList)
                     {
-                        currentListBox.Items.Remove(b.ToString());
+                        appSettings.currentListBox.Items.Remove(b.ToString());
                     }
 
                     formTitleUpdate();
 
-                    updateFlg = true;
+                    appSettings.currentFileInfo.updateFlg = true;
                     
                     break;
 
@@ -554,7 +720,7 @@ namespace FileReminder
                 case Keys.ControlKey:
 
                     ctrlFlg = false;
-                    ShowScrollBar(currentListBox.Handle, 1, true);
+                    ShowScrollBar(appSettings.currentListBox.Handle, 1, true);
 
                     break;
 
@@ -568,51 +734,63 @@ namespace FileReminder
          */
         private void FileReminder_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // 保存されておらず更新があるときに保存確認ダイアログを出す
-            if (!alreadySaveFlg && updateFlg)
+            foreach (string key in appSettings.readfile_fullpath)
             {
-                var msg = new ButtonTextCustomizableMessageBox();
-                msg.ButtonText.Yes = "保存";
-                msg.ButtonText.No = "保存しない";
-                msg.ButtonText.Cancel = "キャンセル";
-                DialogResult result = 
-                    msg.Show("ファイルが保存されていません。", "File Reminder", 
-                    MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation);
-
-                switch (result)
+                appSettings.currentkey = key;
+                // 保存されておらず更新があるときに保存確認ダイアログを出す
+                if (!appSettings.currentFileInfo.already_saveflg && appSettings.currentFileInfo.updateFlg)
                 {
-                    case DialogResult.Cancel:   // キャンセル
-                        // キャンセルは終了を取り消す
-                        e.Cancel = true;
+                    var msg = new ButtonTextCustomizableMessageBox();
+                    msg.ButtonText.Yes = "保存";
+                    msg.ButtonText.No = "保存しない";
+                    msg.ButtonText.Cancel = "キャンセル";
+                    DialogResult result = 
+                        msg.Show(appSettings.currentFrem + "が保存されていません。", "File Reminder", 
+                        MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation);
 
-                        break;
+                    switch (result)
+                    {
+                        case DialogResult.Cancel:   // キャンセル
+                            // キャンセルは終了を取り消す
+                            e.Cancel = true;
 
-                    case DialogResult.Yes:  // 保存する
-                        // 新規？
-                        if (initialFlg)
-                        {
-                            // 新規なので名前をつけて保存する
-                            if (saveAs(FileType.FREM, FREM_FILTER) == DialogResult.Cancel)
+                            break;
+
+                        case DialogResult.Yes:  // 保存する
+                            // 新規？
+                            if (appSettings.currentFileInfo.initialFlg)
                             {
-                                // ダイアログでキャンセルで保存しない場合は終了しない
-                                e.Cancel = true;
+                                // 新規なので名前をつけて保存する
+                                if (saveAs(FileType.FREM, FREM_FILTER) == DialogResult.Cancel)
+                                {
+                                    // ダイアログでキャンセルで保存しない場合は終了しない
+                                    e.Cancel = true;
+                                }
                             }
-                        }
-                        else
-                        {
-                            // 新規ではないので上書き保存
-                            fileSaveOut(FileType.FREM);
-                        }
-                        break;
+                            else
+                            {
+                                // 新規ではないので上書き保存
+                                fileSaveOut(FileType.FREM);
+                            }
+                            break;
 
-                    default:
-                        break;
+                        default:
+                            break;
+                    }
                 }
             }
-            // ファイナル処理
-            settingFinalize();
-            // exe設定を保存する
-            util.xmlWrite(appSettings, CONFIG_PATH, "書込みエラー");
+
+            if (e.Cancel)
+            {
+                appSettings.currentkey = appSettings.readfile_fullpath[this.tabControl1.SelectedIndex];
+            }
+            else
+            {
+                // ファイナル処理
+                settingFinalize();
+                // config設定を保存する
+                util.xmlWrite(saveConfig, CONFIG_PATH, "書込みエラー");
+            }
         }
 
         /*
@@ -644,12 +822,12 @@ namespace FileReminder
          */
         private void clearToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            currentListBox.Items.Clear();
-            appSettings.getCurrentList().Clear();
+            appSettings.currentListBox.Items.Clear();
+            appSettings.currentFileList.Clear();
 
             formTitleUpdate();
 
-            updateFlg = true;
+            appSettings.currentFileInfo.updateFlg = true;
         }
 
         /*
@@ -664,16 +842,16 @@ namespace FileReminder
             System.Drawing.Point cp = this.PointToClient(sp);
 
             Point Location = e.Location;
-            mouseoverIndex = currentListBox.IndexFromPoint(Location);
+            mouseoverIndex = appSettings.currentListBox.IndexFromPoint(Location);
 
             if (mouseoverIndex != -1)
             {
-                label1.Text = appSettings.getCurrentList()[mouseoverIndex];
+                label1.Text = appSettings.currentFileList[mouseoverIndex];
 
-                if (appSettings.highlightFlg)
+                if (saveConfig.highlightFlg)
                 {
-                    currentListBox.ClearSelected();
-                    currentListBox.SetSelected(mouseoverIndex, true);
+                    appSettings.currentListBox.ClearSelected();
+                    appSettings.currentListBox.SetSelected(mouseoverIndex, true);
                 }
             }
         }
@@ -695,15 +873,15 @@ namespace FileReminder
             {
                 if (e.Delta > 0)
                 {
-                    if(currentListBox.Font.Size <= 20) currentListBox.Font = new Font("メイリオ", currentListBox.Font.Size + 2);
-                    if(ctrlFlg) ShowScrollBar(currentListBox.Handle, 1, false);
+                    if(appSettings.currentListBox.Font.Size <= 20) appSettings.currentListBox.Font = new Font("メイリオ", appSettings.currentListBox.Font.Size + 2);
+                    if(ctrlFlg) ShowScrollBar(appSettings.currentListBox.Handle, 1, false);
                 }
                 else
                 {
-                    if(currentListBox.Font.Size >= 10) currentListBox.Font = new Font("メイリオ", currentListBox.Font.Size - 2);
-                    if(ctrlFlg) ShowScrollBar(currentListBox.Handle, 1, false);
+                    if(appSettings.currentListBox.Font.Size >= 10) appSettings.currentListBox.Font = new Font("メイリオ", appSettings.currentListBox.Font.Size - 2);
+                    if(ctrlFlg) ShowScrollBar(appSettings.currentListBox.Handle, 1, false);
                 }
-                appSettings.listbox_font_size = currentListBox.Font.Size;
+                saveConfig.listbox_font_size = appSettings.currentListBox.Font.Size;
             }
         }
 
@@ -728,7 +906,7 @@ namespace FileReminder
 
                     ctrlFlg = true;
                     
-                    ShowScrollBar(currentListBox.Handle, 1, false);
+                    ShowScrollBar(appSettings.currentListBox.Handle, 1, false);
 
                     break;
 
@@ -753,7 +931,7 @@ namespace FileReminder
             ToolStripMenuItem item = (ToolStripMenuItem)sender;
 
             item.Checked = !item.Checked;
-            appSettings.highlightFlg = item.Checked;
+            saveConfig.highlightFlg = item.Checked;
         }
 
         /*
@@ -777,7 +955,24 @@ namespace FileReminder
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            appSettings.currentkey = appSettings.readfile_fullpath[this.tabControl1.SelectedIndex];
 
+            overwriteToolStripMenuItem.Enabled = !appSettings.currentFileInfo.already_saveflg;
+
+            formTitleRefresh();
+        }
+
+        private void debugToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string temp = "";
+
+            foreach (var i in appSettings.readfile_fullpath)
+            {
+                temp += i + Environment.NewLine;
+            }
+
+            MessageBox.Show(temp);
+            MessageBox.Show(appSettings.currentkey);
         }
     }
 }
