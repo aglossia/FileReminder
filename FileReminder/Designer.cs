@@ -35,6 +35,7 @@ namespace FileReminder
             public void tabInit(int tabNum)
             {
                 parent.tabControl1.Controls.Add(tabs[tabNum]);
+
                 this.tabs[tabNum].Controls.Add(listboxs[tabNum]);
 
                 this.tabs[tabNum].AllowDrop = true;
@@ -47,6 +48,8 @@ namespace FileReminder
                 this.tabs[tabNum].TabIndex = 0;
                 //this.tabs[tabNum].Text = "tabs[tabNum]";
                 this.tabs[tabNum].UseVisualStyleBackColor = true;
+
+                this.tabs[tabNum].ContextMenuStrip = parent.contextMenuStrip2;
 
 
                 this.listboxs[tabNum].AllowDrop = true;
