@@ -32,6 +32,8 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FileReminder));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.menuToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.newfileToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.openfileToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.overwriteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveasToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.playlistToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -51,8 +53,7 @@
             this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.newfileToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.openfileToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.menuStrip1.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             this.contextMenuStrip2.SuspendLayout();
@@ -84,6 +85,20 @@
             this.menuToolStripMenuItem.Name = "menuToolStripMenuItem";
             this.menuToolStripMenuItem.Size = new System.Drawing.Size(68, 22);
             this.menuToolStripMenuItem.Text = "メニュー";
+            // 
+            // newfileToolStripMenuItem1
+            // 
+            this.newfileToolStripMenuItem1.Name = "newfileToolStripMenuItem1";
+            this.newfileToolStripMenuItem1.Size = new System.Drawing.Size(172, 22);
+            this.newfileToolStripMenuItem1.Text = "新規作成";
+            this.newfileToolStripMenuItem1.Click += new System.EventHandler(this.newfileToolStripMenuItem1_Click);
+            // 
+            // openfileToolStripMenuItem1
+            // 
+            this.openfileToolStripMenuItem1.Name = "openfileToolStripMenuItem1";
+            this.openfileToolStripMenuItem1.Size = new System.Drawing.Size(172, 22);
+            this.openfileToolStripMenuItem1.Text = "開く";
+            this.openfileToolStripMenuItem1.Click += new System.EventHandler(this.openfileToolStripMenuItem1_Click);
             // 
             // overwriteToolStripMenuItem
             // 
@@ -232,19 +247,9 @@
             this.tabPage1.Text = "tabPage1";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
-            // newfileToolStripMenuItem1
+            // backgroundWorker1
             // 
-            this.newfileToolStripMenuItem1.Name = "newfileToolStripMenuItem1";
-            this.newfileToolStripMenuItem1.Size = new System.Drawing.Size(172, 22);
-            this.newfileToolStripMenuItem1.Text = "新規作成";
-            this.newfileToolStripMenuItem1.Click += new System.EventHandler(this.newfileToolStripMenuItem1_Click);
-            // 
-            // openfileToolStripMenuItem1
-            // 
-            this.openfileToolStripMenuItem1.Name = "openfileToolStripMenuItem1";
-            this.openfileToolStripMenuItem1.Size = new System.Drawing.Size(172, 22);
-            this.openfileToolStripMenuItem1.Text = "開く";
-            this.openfileToolStripMenuItem1.Click += new System.EventHandler(this.openfileToolStripMenuItem1_Click);
+            this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
             // 
             // FileReminder
             // 
@@ -295,6 +300,7 @@
         private System.Windows.Forms.ToolStripMenuItem deleteToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem newfileToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem openfileToolStripMenuItem1;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
 
     }
 }
