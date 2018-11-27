@@ -47,6 +47,7 @@ namespace FileReminder
             public string listbox_font_type { set; get; }
             public float listbox_font_size { set; get; }
             public bool highlightFlg { set; get; }
+            public bool startup_windowFlg { set; get; }
             public int form_width { set; get; }
             public int form_height { set; get; }
             public int form_start_x { set; get; }
@@ -57,6 +58,7 @@ namespace FileReminder
                 listbox_font_size = 12;
                 listbox_font_type = "メイリオ";
                 highlightFlg = false;
+                startup_windowFlg = false;
                 form_width = 452;
                 form_height = 431;
                 form_start_x = 200;
@@ -221,7 +223,7 @@ namespace FileReminder
         // 新規ファイル数
         int initCnt = 0;
 
-        save_config saveConfig = new save_config();
+        public save_config saveConfig = new save_config();
 
         settings appSettings = new settings();
         
@@ -383,7 +385,7 @@ namespace FileReminder
                             else
                             {
                                 // 新規ではないので上書き保存
-                                fileSaveOut(FileType.FREM);
+                                fileSaveOut(FileType.FREM, SaveType.OVERWRITE);
                             }
                             break;
 
@@ -422,7 +424,7 @@ namespace FileReminder
          * 
          * return: true 読み込み成功、false 読み込みエラー
          */
-        private bool fremRead(string fremFile)
+        public bool fremRead(string fremFile)
         {
             // 既に開いているファイル
             if(appSettings.currentInfo.ContainsKey(fremFile)) return false;
@@ -483,7 +485,7 @@ namespace FileReminder
         /*
          * ファイル保存
          */
-        private void fileSaveOut(FileType filetype)
+        private void fileSaveOut(FileType filetype, SaveType savetype = SaveType.DEFAULT)
         {
             // 保存ファイルフルパス
             string fileNameFullPath = appSettings.currentFileName[(int)filetype];
@@ -497,10 +499,26 @@ namespace FileReminder
 
                     util.xmlWrite(fP, fileNameFullPath, "書込みエラー");
 
-                    // 保存した情報をタブに新規追加
-                    addTabMain(fileNameFullPath, new fileInfomation{fPs = fP, already_saveflg = true, initialFlg = false});
-                    // タブを更新したため現在のタブを削除
-                    removeTabMain(appSettings.currentTabIndex - 1, SaveType.SAVE_AS);
+                    switch (savetype)
+                    {
+                        case SaveType.SAVE_AS:  // 名前を付けて保存のときは新規にタブを追加する
+
+                            // 保存した情報をタブに新規追加
+                            addTabMain(fileNameFullPath, new fileInfomation{fPs = fP, already_saveflg = true, initialFlg = false});
+                            // タブを更新したため現在のタブを削除
+                            removeTabMain(appSettings.currentTabIndex - 1, savetype);
+
+                            break;
+
+                        case SaveType.OVERWRITE:    // 上書き保存のときは更新だけする
+
+                            appSettings.currentFileInfo.already_saveflg = true;
+                            appSettings.currentFileInfo.initialFlg = true;
+
+                            reminderTabs.tabs[appSettings.currentTabIndex].Text = Path.GetFileName(appSettings.currentFrem);
+
+                            break;
+                    }
 
                     // フォームタイトル更新
                     formTitleRefresh();
@@ -580,7 +598,7 @@ namespace FileReminder
                 // 現在のファイル名を更新（ファイル種別毎）
                 appSettings.currentFileName[(int)filetype] = sfd.FileName;
 
-                fileSaveOut(filetype);
+                fileSaveOut(filetype, SaveType.SAVE_AS);
             }
 
             return dialog_ret;
@@ -600,7 +618,6 @@ namespace FileReminder
         private void settingInitialize()
         {
             appSettings.currentListBox.Font = new Font(saveConfig.listbox_font_type, saveConfig.listbox_font_size);
-            highligntToolStripMenuItem.Checked = saveConfig.highlightFlg;
             this.Width = saveConfig.form_width;
             this.Height = saveConfig.form_height;
             this.Location = new Point(saveConfig.form_start_x, saveConfig.form_start_y);
@@ -634,8 +651,10 @@ namespace FileReminder
 
             string[] cmds = System.Environment.GetCommandLineArgs();
 
+#if DEBUG
             // デバッグ用
-            if(true) cmds = new string[]{""};
+            if(false) cmds = new string[]{""};
+#endif
 
             // frem.config があれば読み込む
             if (File.Exists(CONFIG_PATH))
@@ -686,9 +705,13 @@ namespace FileReminder
             // ドロップされたすべてのファイル名を取得する
             string[] fileNames = (string[])e.Data.GetData(DataFormats.FileDrop, false);
 
-            // Selectで拡張子だけを取り出す、Distinctで種類わけする
-            // その種類が１のときは拡張子混在なし
-            if (fileNames.Select(i => Path.GetExtension(i)).Distinct().Count() != 1)
+            // 拡張子だけを取り出す
+            IEnumerable<string> exts = fileNames.Select(i => Path.GetExtension(i));
+
+            // 取り出した拡張子をDistinctで種類わけする
+            // その種類が２以上かつ
+            // frem拡張子を含むときは混在あり
+            if (exts.Distinct().Count() != 1 && exts.Contains(".frem"))
             {
                 MessageBox.Show("fremファイルと他のファイルが混在しています。");
                 return;
@@ -826,7 +849,7 @@ namespace FileReminder
          */
         private void overwriteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            fileSaveOut(FileType.FREM);
+            fileSaveOut(FileType.FREM, SaveType.OVERWRITE);
         }
 
         /*
@@ -952,13 +975,13 @@ namespace FileReminder
         /*
          * 設定：行ハイライト
          */
-        private void highligntToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ToolStripMenuItem item = (ToolStripMenuItem)sender;
+        //private void highligntToolStripMenuItem_Click(object sender, EventArgs e)
+        //{
+        //    ToolStripMenuItem item = (ToolStripMenuItem)sender;
 
-            item.Checked = !item.Checked;
-            saveConfig.highlightFlg = item.Checked;
-        }
+        //    item.Checked = !item.Checked;
+        //    saveConfig.highlightFlg = item.Checked;
+        //}
 
         /*
          * マウスリーブ
@@ -989,6 +1012,12 @@ namespace FileReminder
         {
             if (this.tabControl1.SelectedIndex != -1)
             {
+                if (ctrlFlg)
+                {
+                    ShowScrollBar(appSettings.currentListBox.Handle, 1, true);
+                    ctrlFlg = false;
+                }
+
                 appSettings.currentkey = appSettings.readfile_fullpath[this.tabControl1.SelectedIndex];
 
                 overwriteToolStripMenuItem.Enabled = !appSettings.currentFileInfo.already_saveflg;
@@ -1008,10 +1037,9 @@ namespace FileReminder
                 temp += i + Environment.NewLine;
             }
 
-            //MessageBox.Show("読み込みファイル：" + temp + Environment.NewLine + "選択ファイル：" + appSettings.currentkey);
             MessageBox.Show(string.Format("読み込みファイル：{0}選択ファイル：{1}currentTabIndex：{2}", 
-                temp + Environment.NewLine,
-                appSettings.currentkey + Environment.NewLine + Environment.NewLine,
+                Environment.NewLine + temp + Environment.NewLine,
+                Environment.NewLine + appSettings.currentkey + Environment.NewLine + Environment.NewLine,
                 appSettings.currentTabIndex));
         }
 
@@ -1084,6 +1112,50 @@ namespace FileReminder
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
             //MessageBox.Show(string.Format("\"{0}\"は既に開かれているファイルです。", e.Argument));
+        }
+
+        int keybit = 0;
+        bool oneShot = true;
+
+        private void commonSettingToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            SettingForm.showSettingForm( ref saveConfig );
+        }
+
+        private void tabControl1_KeyDown(object sender, KeyEventArgs e)
+        {
+            //switch (e.KeyData)
+            //{
+            //    case Keys.Control | Keys.Tab:
+
+            //        this.tabControl1.SelectedIndex = appSettings.currentTabIndex;
+
+            //        break;
+
+            //    case Keys.Control | Keys.Shift | Keys.Tab:
+
+            //        this.tabControl1.SelectedIndex--;
+
+            //        break;
+
+            //    default:
+            //        break;
+            //}
+        }
+
+        private void tabControl1_KeyUp(object sender, KeyEventArgs e)
+        {
+            //switch (e.KeyData)
+            //{
+            //    case Keys.Control | Keys.Tab:
+
+            //        label1.Text = "";
+
+            //        break;
+
+            //    default:
+            //        break;
+            //}
         }
     }
 }

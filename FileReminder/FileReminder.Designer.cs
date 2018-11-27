@@ -40,7 +40,7 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.highligntToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.commonSettingToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ヘルプToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -136,17 +136,17 @@
             // settingToolStripMenuItem
             // 
             this.settingToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.highligntToolStripMenuItem});
+            this.commonSettingToolStripMenuItem1});
             this.settingToolStripMenuItem.Name = "settingToolStripMenuItem";
             this.settingToolStripMenuItem.Size = new System.Drawing.Size(44, 22);
             this.settingToolStripMenuItem.Text = "設定";
             // 
-            // highligntToolStripMenuItem
+            // commonSettingToolStripMenuItem1
             // 
-            this.highligntToolStripMenuItem.Name = "highligntToolStripMenuItem";
-            this.highligntToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
-            this.highligntToolStripMenuItem.Text = "行ハイライト";
-            this.highligntToolStripMenuItem.Click += new System.EventHandler(this.highligntToolStripMenuItem_Click);
+            this.commonSettingToolStripMenuItem1.Name = "commonSettingToolStripMenuItem1";
+            this.commonSettingToolStripMenuItem1.Size = new System.Drawing.Size(124, 22);
+            this.commonSettingToolStripMenuItem1.Text = "共通設定";
+            this.commonSettingToolStripMenuItem1.Click += new System.EventHandler(this.commonSettingToolStripMenuItem1_Click);
             // 
             // editToolStripMenuItem
             // 
@@ -221,6 +221,8 @@
             this.tabControl1.Size = new System.Drawing.Size(410, 339);
             this.tabControl1.TabIndex = 8;
             this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
+            this.tabControl1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tabControl1_KeyDown);
+            this.tabControl1.KeyUp += new System.Windows.Forms.KeyEventHandler(this.tabControl1_KeyUp);
             this.tabControl1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.tabControl1_MouseMove);
             // 
             // contextMenuStrip2
@@ -290,7 +292,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem settingToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem highligntToolStripMenuItem;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.ToolStripMenuItem ヘルプToolStripMenuItem;
@@ -301,6 +302,7 @@
         private System.Windows.Forms.ToolStripMenuItem newfileToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem openfileToolStripMenuItem1;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.Windows.Forms.ToolStripMenuItem commonSettingToolStripMenuItem1;
 
     }
 }
